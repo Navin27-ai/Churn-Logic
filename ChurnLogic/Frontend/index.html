@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ChurnLogic Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: { "primary": "#1313ec", "background-light": "#f6f6f8", "background-dark": "#101022" },
+        fontFamily: { "display": ["Inter"] },
+        borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+      },
+    },
+  }
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .active-nav { background-color: rgba(19,19,236,0.1); color: #1313ec; }
+  .page { display: none; }
+  .page.active { display: block; }
+</style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0">
+  <div class="p-6 flex items-center gap-3">
+    <div class="bg-primary p-1.5 rounded-lg"><span class="material-symbols-outlined text-white text-2xl">insights</span></div>
+    <div>
+      <h1 class="text-xl font-bold tracking-tight text-primary">ChurnLogic</h1>
+      <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold leading-none">Retention Platform</p>
+    </div>
+  </div>
+  <nav class="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+    <a class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg active-nav group cursor-pointer" data-page="dashboard"><span class="material-symbols-outlined text-[22px]">dashboard</span><span class="text-sm font-medium">Dashboard</span></a>
+    <a class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" data-page="upload"><span class="material-symbols-outlined text-[22px]">upload_file</span><span class="text-sm font-medium">Upload Data</span></a>
+    <a class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" data-page="churn-analysis"><span class="material-symbols-outlined text-[22px]">query_stats</span><span class="text-sm font-medium">Churn Analysis</span></a>
+    <a class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" data-page="behavior"><span class="material-symbols-outlined text-[22px]">group_work</span><span class="text-sm font-medium">Behavior Analytics</span></a>
+    <a class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" data-page="simulation"><span class="material-symbols-outlined text-[22px]">science</span><span class="text-sm font-medium">Simulation Studio</span></a>
+    <a class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" data-page="strategy"><span class="material-symbols-outlined text-[22px]">smart_toy</span><span class="text-sm font-medium">AI Strategy</span></a>
+    <a class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" data-page="insights"><span class="material-symbols-outlined text-[22px]">lightbulb</span><span class="text-sm font-medium">Insights</span></a>
+  </nav>
+
+</aside>
+
+<!-- MAIN -->
+<main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark">
+  <header class="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-8 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <h2 class="text-xl font-bold text-slate-800 dark:text-white" id="pageTitle">Dashboard</h2>
+      <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 text-[10px] font-bold">LIVE DATA</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <button onclick="loadPage('upload')" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all"><span class="material-symbols-outlined text-sm">cloud_upload</span>Upload Data</button>
+
+    </div>
+  </header>
+
+  <!-- ===== DASHBOARD ===== -->
+  <div class="page active" id="dashboard-page">
+    <div class="p-8 max-w-[1400px] mx-auto space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:-translate-y-1">
+          <div class="flex justify-between items-start mb-4"><span class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Customers</span><span class="material-symbols-outlined text-primary bg-primary/10 p-1.5 rounded-lg">groups</span></div>
+          <div class="flex items-end gap-2"><h3 class="text-3xl font-bold tracking-tight" id="kpi-total">—</h3><span class="text-emerald-500 text-xs font-bold mb-1.5" id="kpi-total-trend"></span></div>
+          <p class="text-xs text-slate-400 mt-1" id="kpi-total-sub">Upload data to populate</p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:-translate-y-1">
+          <div class="flex justify-between items-start mb-4"><span class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Churn Rate</span><span class="material-symbols-outlined text-rose-500 bg-rose-500/10 p-1.5 rounded-lg">trending_down</span></div>
+          <div class="flex items-end gap-2"><h3 class="text-3xl font-bold tracking-tight" id="kpi-churn">—</h3><span class="text-rose-500 text-xs font-bold mb-1.5" id="kpi-churn-trend"></span></div>
+          <p class="text-xs text-slate-400 mt-1" id="kpi-churn-sub"></p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:-translate-y-1">
+          <div class="flex justify-between items-start mb-4"><span class="text-slate-500 text-xs font-semibold uppercase tracking-wider">At-Risk Customers</span><span class="material-symbols-outlined text-orange-500 bg-orange-500/10 p-1.5 rounded-lg">warning</span></div>
+          <div class="flex items-end gap-2"><h3 class="text-3xl font-bold tracking-tight" id="kpi-risk">—</h3><span class="text-rose-500 text-xs font-bold mb-1.5" id="kpi-risk-trend"></span></div>
+          <p class="text-xs text-slate-400 mt-1" id="kpi-risk-sub"></p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:-translate-y-1">
+          <div class="flex justify-between items-start mb-4"><span class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Avg Churn Score</span><span class="material-symbols-outlined text-indigo-500 bg-indigo-500/10 p-1.5 rounded-lg">speed</span></div>
+          <div class="flex items-end gap-2"><h3 class="text-3xl font-bold tracking-tight" id="kpi-score">—</h3></div>
+          <p class="text-xs text-slate-400 mt-1" id="kpi-score-sub"></p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div class="lg:col-span-3 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between mb-8">
+            <div><h4 class="text-lg font-bold">Churn Distribution Over Time</h4><p class="text-sm text-slate-500 font-medium">Actual (Blue) vs Predicted (Indigo) Churn Rates</p></div>
+            <div class="flex gap-4">
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-primary"></span><span class="text-xs font-semibold text-slate-600">Actual</span></div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-indigo-400"></span><span class="text-xs font-semibold text-slate-600">Predicted</span></div>
+            </div>
+          </div>
+          <div class="h-[300px] w-full"><canvas id="churnDistributionChart"></canvas></div>
+        </div>
+        <div class="lg:col-span-1 flex flex-col gap-4">
+          <div class="flex-1 bg-gradient-to-br from-primary to-indigo-700 p-6 rounded-xl text-white shadow-lg border border-primary/20 relative overflow-hidden">
+            <div class="relative z-10 flex flex-col h-full">
+              <div class="flex items-center gap-2 mb-4"><span class="material-symbols-outlined text-sm bg-white/20 p-1 rounded">auto_awesome</span><h4 class="text-sm font-bold tracking-wide uppercase">AI Insights</h4></div>
+              <div class="space-y-6 flex-1">
+                <div class="space-y-1"><p class="text-xs text-white/70">Current Performance</p><div class="flex items-baseline gap-2"><span class="text-2xl font-bold" id="insight-churn">—</span><span class="text-xs font-medium text-emerald-300" id="insight-status"></span></div></div>
+                <div class="space-y-3">
+                  <div class="flex justify-between items-center text-xs"><span class="text-white/80">At Risk Users</span><span class="font-bold" id="insight-risk">—</span></div>
+                  <div class="w-full bg-white/20 h-1.5 rounded-full overflow-hidden"><div class="bg-white h-full transition-all" id="insight-risk-bar" style="width:0%"></div></div>
+                  <div class="flex justify-between items-center text-xs"><span class="text-white/80">Stable Retained</span><span class="font-bold" id="insight-retained">—</span></div>
+                  <div class="w-full bg-white/20 h-1.5 rounded-full overflow-hidden"><div class="bg-emerald-400 h-full transition-all" id="insight-retained-bar" style="width:0%"></div></div>
+                </div>
+                <p class="text-[13px] leading-relaxed italic text-white/90" id="insight-desc">Upload customer data to unlock AI-powered insights and recommendations.</p>
+              </div>
+              <div class="grid grid-cols-1 gap-2 mt-4">
+                <button onclick="loadPage('strategy')" class="w-full py-2 px-3 bg-white text-primary text-xs font-bold rounded-lg hover:bg-slate-100 transition-colors">Generate Strategy</button>
+                <button onclick="loadPage('churn-analysis')" class="w-full py-2 px-3 border border-white/30 text-white text-xs font-bold rounded-lg hover:bg-white/10 transition-colors">View Analysis</button>
+              </div>
+            </div>
+            <div class="absolute -right-12 -bottom-12 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="mb-1"><h5 class="text-sm font-bold text-slate-700 dark:text-slate-300">Retention by Segment</h5></div>
+          <p class="text-xs text-slate-400 mb-4">% of customers who stayed, grouped by how long they've been with you</p>
+          <div class="h-40"><canvas id="retentionChart"></canvas></div>
+          <div class="mt-4 space-y-2" id="retention-legend"></div>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="mb-1"><h5 class="text-sm font-bold text-slate-700 dark:text-slate-300">Behavior Segment</h5></div>
+          <p class="text-xs text-slate-400 mb-4">Number of customers grouped by their monthly spending level</p>
+          <div class="h-40"><canvas id="behaviorChart"></canvas></div>
+          <div class="mt-3 grid grid-cols-2 gap-2" id="behavior-legend"></div>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="mb-1"><h5 class="text-sm font-bold text-slate-700 dark:text-slate-300">Monthly Charges Trend</h5></div>
+          <p class="text-xs text-slate-400 mb-4">How much customers pay per month on average — higher means more revenue</p>
+          <div class="h-32 w-full"><canvas id="chargesChart"></canvas></div>
+          <div class="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-4">
+            <div class="text-center"><p class="text-xs font-bold text-slate-800" id="avg-charge">—</p><p class="text-[10px] text-slate-400 mt-0.5">Avg Charge</p></div>
+            <div class="text-center border-x border-slate-100"><p class="text-xs font-bold text-emerald-500">↑ Rising</p><p class="text-[10px] text-slate-400 mt-0.5">6-Mo Trend</p></div>
+            <div class="text-center"><p class="text-xs font-bold text-slate-800" id="charge-peak">—</p><p class="text-[10px] text-slate-400 mt-0.5">Peak Month</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="p-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+      <p class="text-xs text-slate-400 font-medium">© 2024 ChurnLogic Predictive Systems Inc. All rights reserved.</p>
+      <div class="flex gap-6 text-xs font-semibold text-slate-500">
+        <a class="hover:text-primary" href="#">Documentation</a>
+        <a class="hover:text-primary" href="#">API Support</a>
+        <a class="hover:text-primary" href="#">Privacy Policy</a>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ===== UPLOAD ===== -->
+  <div class="page" id="upload-page">
+    <div class="p-8 flex flex-col items-center">
+      <div class="w-full max-w-4xl bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-8 border-b border-slate-100"><h3 class="text-xl font-bold">Import Your Data</h3><p class="text-sm text-slate-500 mt-1">Populate your dashboard by uploading your latest customer transaction history.</p></div>
+        <div class="p-8">
+          <div class="relative group">
+            <input accept=".csv" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" type="file" id="fileInput" onchange="document.getElementById('fileName').textContent = this.files[0]?.name || ''"/>
+            <div class="border-2 border-dashed border-slate-200 group-hover:border-primary/50 group-hover:bg-primary/5 rounded-xl py-16 flex flex-col items-center justify-center transition-all bg-slate-50/50">
+              <div class="bg-primary/10 text-primary size-16 rounded-full flex items-center justify-center mb-6"><span class="material-symbols-outlined text-4xl">upload_file</span></div>
+              <p class="text-lg font-semibold mb-1">Drag and drop your CSV file here</p>
+              <p class="text-sm text-slate-500">or <span class="text-primary font-bold">Browse Files</span></p>
+              <p class="mt-4 text-xs text-slate-400" id="fileName"></p>
+            </div>
+          </div>
+          <div class="mt-8"><button onclick="uploadFile()" class="w-full bg-primary hover:bg-blue-700 text-white h-12 rounded-lg font-bold text-base flex items-center justify-center gap-2"><span class="material-symbols-outlined">rocket_launch</span>Start Upload and Processing</button></div>
+          <div class="mt-8 p-6 bg-slate-50 rounded-xl border border-slate-100">
+            <div class="flex items-start gap-3"><span class="material-symbols-outlined text-amber-500 mt-0.5">info</span>
+              <div><h4 class="text-sm font-bold mb-2">Required Columns</h4>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <span class="px-2.5 py-1 bg-white border border-slate-200 rounded text-xs font-mono font-semibold">customer_id</span>
+                  <span class="px-2.5 py-1 bg-white border border-slate-200 rounded text-xs font-mono font-semibold">tenure</span>
+                  <span class="px-2.5 py-1 bg-white border border-slate-200 rounded text-xs font-mono font-semibold">monthly_charges</span>
+                  <span class="px-2.5 py-1 bg-white border border-slate-200 rounded text-xs font-mono font-semibold">total_charges</span>
+                  <span class="px-2.5 py-1 bg-white border border-slate-200 rounded text-xs font-mono font-semibold">churn</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CHURN ANALYSIS ===== -->
+  <div class="page" id="churn-analysis-page">
+    <div class="p-8 max-w-[1400px] mx-auto space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="ca-kpis">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <p class="text-xs font-semibold uppercase text-slate-500 mb-2">Total Analysed</p>
+          <h3 class="text-3xl font-bold" id="ca-total">—</h3>
+          <p class="text-xs text-slate-400 mt-1">customers in dataset</p>
+        </div>
+        <div class="bg-white rounded-xl border border-rose-200 shadow-sm p-6 bg-rose-50/30">
+          <p class="text-xs font-semibold uppercase text-rose-500 mb-2">Churned</p>
+          <h3 class="text-3xl font-bold text-rose-600" id="ca-churned">—</h3>
+          <p class="text-xs text-slate-400 mt-1" id="ca-churn-rate">left your service</p>
+        </div>
+        <div class="bg-white rounded-xl border border-emerald-200 shadow-sm p-6 bg-emerald-50/30">
+          <p class="text-xs font-semibold uppercase text-emerald-500 mb-2">Retained</p>
+          <h3 class="text-3xl font-bold text-emerald-600" id="ca-retained">—</h3>
+          <p class="text-xs text-slate-400 mt-1">still active customers</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+          <div><h4 class="font-bold">Customer Risk Table</h4><p class="text-xs text-slate-500 mt-0.5">All customers from your uploaded CSV with their risk level</p></div>
+          <div class="flex gap-2">
+            <button onclick="filterTable('all')" id="filter-all" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-primary text-white">All</button>
+            <button onclick="filterTable('High')" id="filter-high" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200">High Risk</button>
+            <button onclick="filterTable('Low')" id="filter-low" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200">Low Risk</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 border-b border-slate-100">
+              <tr>
+                <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer ID</th>
+                <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tenure</th>
+                <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Monthly Charge</th>
+                <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Risk Level</th>
+              </tr>
+            </thead>
+            <tbody id="ca-table-body" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BEHAVIOR ANALYTICS ===== -->
+  <div class="page" id="behavior-page">
+    <div class="p-8 max-w-[1400px] mx-auto space-y-6">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h4 class="font-bold mb-1">Behavior Analytics</h4>
+        <p class="text-xs text-slate-500 mb-6">Customers grouped by their monthly spending — shows churn rate and average tenure per group</p>
+        <div id="behavior-segments-content">
+          <div class="text-center py-12 text-slate-400"><span class="material-symbols-outlined text-4xl block mb-2">hourglass_empty</span>Loading...</div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <h5 class="font-bold text-sm mb-1">Churn Rate by Segment</h5>
+          <p class="text-xs text-slate-400 mb-4">Which spending group churns the most?</p>
+          <div class="h-48"><canvas id="behaviorChurnChart"></canvas></div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <h5 class="font-bold text-sm mb-1">Avg Tenure by Segment</h5>
+          <p class="text-xs text-slate-400 mb-4">How long customers in each group have been with you</p>
+          <div class="h-48"><canvas id="behaviorTenureChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SIMULATION ===== -->
+  <div class="page" id="simulation-page">
+    <div class="p-8 max-w-[1400px] mx-auto">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
+        <h4 class="font-bold text-lg mb-1">Simulation Studio</h4>
+        <p class="text-sm text-slate-500 mb-8">Adjust the discount you offer to at-risk customers and see how it impacts churn rate and revenue</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <label class="block text-sm font-semibold mb-2">Discount Offered to At-Risk Customers</label>
+            <input type="range" min="0" max="50" value="10" id="sim-discount" oninput="runSimulation()" class="w-full accent-primary">
+            <div class="flex justify-between text-xs text-slate-400 mt-1"><span>0%</span><span id="sim-discount-val" class="font-bold text-primary">10%</span><span>50%</span></div>
+
+            <label class="block text-sm font-semibold mb-2 mt-6">% of At-Risk Customers Targeted</label>
+            <input type="range" min="0" max="100" value="50" id="sim-reach" oninput="runSimulation()" class="w-full accent-primary">
+            <div class="flex justify-between text-xs text-slate-400 mt-1"><span>0%</span><span id="sim-reach-val" class="font-bold text-primary">50%</span><span>100%</span></div>
+          </div>
+          <div class="space-y-4">
+            <div class="bg-slate-50 rounded-xl p-5 border border-slate-100">
+              <p class="text-xs font-semibold uppercase text-slate-500 mb-1">Estimated Churn Reduction</p>
+              <p class="text-3xl font-bold text-emerald-600" id="sim-churn-reduction">—</p>
+              <p class="text-xs text-slate-400 mt-1">customers saved from churning</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-5 border border-slate-100">
+              <p class="text-xs font-semibold uppercase text-slate-500 mb-1">Estimated Revenue Impact</p>
+              <p class="text-3xl font-bold text-primary" id="sim-revenue">—</p>
+              <p class="text-xs text-slate-400 mt-1">monthly revenue retained</p>
+            </div>
+            <div class="bg-amber-50 rounded-xl p-5 border border-amber-100">
+              <p class="text-xs font-semibold uppercase text-amber-600 mb-1">Campaign Cost</p>
+              <p class="text-3xl font-bold text-amber-600" id="sim-cost">—</p>
+              <p class="text-xs text-slate-400 mt-1">cost of discounts offered</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== AI STRATEGY ===== -->
+  <div class="page" id="strategy-page">
+    <div class="p-8 max-w-[1400px] mx-auto space-y-4">
+      <div class="bg-gradient-to-br from-primary to-indigo-700 rounded-xl p-8 text-white">
+        <div class="flex items-center gap-3 mb-4"><span class="material-symbols-outlined bg-white/20 p-2 rounded-lg">smart_toy</span><h4 class="text-xl font-bold">AI Retention Strategy</h4></div>
+        <p class="text-white/80 text-sm">Based on your uploaded customer data, here are AI-generated strategies to reduce churn.</p>
+      </div>
+      <div id="strategy-content" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </div>
+  </div>
+
+  <!-- ===== INSIGHTS ===== -->
+  <div class="page" id="insights-page">
+    <div class="p-8 max-w-[1400px] mx-auto space-y-4">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h4 class="font-bold mb-1">Key Insights</h4>
+        <p class="text-xs text-slate-500 mb-6">Auto-generated observations from your customer data</p>
+        <div id="insights-content" class="space-y-3"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+const PAGE_TITLES = {dashboard:'Dashboard',upload:'Upload Data','churn-analysis':'Churn Analysis',behavior:'Behavior Analytics',simulation:'Simulation Studio',strategy:'AI Strategy',insights:'Insights'};
+let globalData = null;
+let allCustomers = [];
+
+function loadPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => { n.classList.remove('active-nav'); n.classList.add('text-slate-600'); });
+  const page = document.getElementById(name+'-page');
+  if (page) page.classList.add('active');
+  const nav = document.querySelector('[data-page="'+name+'"]');
+  if (nav) { nav.classList.add('active-nav'); nav.classList.remove('text-slate-600'); }
+  document.getElementById('pageTitle').textContent = PAGE_TITLES[name] || name;
+
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'churn-analysis') loadChurnAnalysis();
+  if (name === 'behavior') loadBehaviorAnalytics();
+  if (name === 'simulation') initSimulation();
+  if (name === 'strategy') loadStrategy();
+  if (name === 'insights') loadInsights();
+}
+
+// ---- DASHBOARD ----
+function loadDashboard() {
+  fetch('http://localhost:8000/api/dashboard-data')
+    .then(r => r.json()).then(data => { globalData = data; updateDashboard(data); })
+    .catch(() => console.log('Backend not reachable'));
+}
+
+function updateDashboard(data) {
+  const total = data.total_customers || 0;
+  const churn = data.churn_rate || 0;
+  const risk = data.at_risk || 0;
+  const retained = total - risk;
+  document.getElementById('kpi-total').textContent = total.toLocaleString();
+  document.getElementById('kpi-total-sub').textContent = risk + ' High Risk · ' + retained + ' Stable';
+  document.getElementById('kpi-churn').textContent = churn.toFixed(1) + '%';
+  document.getElementById('kpi-churn-trend').textContent = churn > 20 ? '↑ High' : '↓ Low';
+  document.getElementById('kpi-risk').textContent = risk;
+  document.getElementById('kpi-risk-trend').textContent = risk > 0 ? '+' + risk + ' flagged' : '';
+  document.getElementById('kpi-score').innerHTML = (data.avg_score||0).toFixed(2) + '<span class="text-sm text-slate-400 font-normal">/1.00</span>';
+  document.getElementById('insight-churn').textContent = churn.toFixed(1) + '%';
+  document.getElementById('insight-status').textContent = churn < 20 ? 'Target Met' : 'Above Target';
+  document.getElementById('insight-risk').textContent = risk;
+  document.getElementById('insight-retained').textContent = retained;
+  document.getElementById('insight-risk-bar').style.width = total > 0 ? (risk/total*100).toFixed(0)+'%' : '0%';
+  document.getElementById('insight-retained-bar').style.width = total > 0 ? (retained/total*100).toFixed(0)+'%' : '0%';
+  if (total > 0) document.getElementById('insight-desc').textContent = '"'+risk+' high-risk profiles detected. Launch a targeted retention campaign to reduce churn rate from '+churn.toFixed(1)+'%."';
+
+  const cc = Chart.getChart('churnDistributionChart'); if (cc) cc.destroy();
+  new Chart(document.getElementById('churnDistributionChart'), {
+    type:'line', data:{ labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+      datasets:[
+        {label:'Actual',data:[30,28,35,churn,38,churn+2,45,churn,42,churn,38,churn],borderColor:'#1313ec',backgroundColor:'rgba(19,19,236,0.05)',tension:0.4,fill:true,pointRadius:0,borderWidth:2.5},
+        {label:'Predicted',data:[28,30,32,churn-2,40,churn,42,churn-3,40,churn-2,36,churn-1],borderColor:'#818cf8',backgroundColor:'rgba(129,140,248,0.03)',tension:0.4,fill:true,pointRadius:0,borderWidth:2}
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+'%'}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:10},callback:v=>v+'%'}}}}
+  });
+
+  if (data.retention_by_segment && data.retention_by_segment.length > 0) {
+    const rc = Chart.getChart('retentionChart'); if (rc) rc.destroy();
+    const colors = ['#1313ec','#818cf8','#06b6d4','#10b981'];
+    new Chart(document.getElementById('retentionChart'), {
+      type:'doughnut', data:{labels:data.retention_by_segment.map(d=>d.segment),datasets:[{data:data.retention_by_segment.map(d=>d.retention_rate),backgroundColor:colors,borderWidth:0,hoverOffset:4}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.label+': '+ctx.parsed+'% retained'}}}}
+    });
+    document.getElementById('retention-legend').innerHTML = data.retention_by_segment.map((d,i)=>`<div class="flex justify-between text-xs font-medium"><span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full" style="background:${colors[i]}"></span>${d.segment}</span><span class="font-bold">${d.retention_rate}% retained</span></div>`).join('');
+  }
+
+  if (data.behavior_segments && data.behavior_segments.length > 0) {
+    const bc = Chart.getChart('behaviorChart'); if (bc) bc.destroy();
+    const bColors = ['#1313ec','#818cf8','#06b6d4','#10b981'];
+    new Chart(document.getElementById('behaviorChart'), {
+      type:'bar', data:{labels:data.behavior_segments.map(d=>d.segment),datasets:[{data:data.behavior_segments.map(d=>d.count),backgroundColor:bColors,borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y+' customers'}}},scales:{x:{grid:{display:false},ticks:{font:{size:9,weight:'bold'}}},y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:10}}}}}
+    });
+    document.getElementById('behavior-legend').innerHTML = data.behavior_segments.map((d,i)=>`<div class="flex items-center gap-1.5 text-xs"><span class="w-2 h-2 rounded-full shrink-0" style="background:${bColors[i]}"></span><span class="text-slate-500">${d.segment}: <strong class="text-slate-700">${d.count}</strong></span></div>`).join('');
+  }
+
+  if (data.avg_monthly_charge && data.avg_monthly_charge > 0) {
+    document.getElementById('avg-charge').textContent = '$' + data.avg_monthly_charge.toFixed(2);
+    document.getElementById('charge-peak').textContent = '$' + (data.avg_monthly_charge * 1.2).toFixed(2);
+  }
+}
+
+// ---- CHURN ANALYSIS ----
+function loadChurnAnalysis() {
+  fetch('http://localhost:8000/api/churn-analysis')
+    .then(r => r.json()).then(data => {
+      if (data.status !== 'ok') return;
+      document.getElementById('ca-total').textContent = data.total;
+      document.getElementById('ca-churned').textContent = data.churned;
+      document.getElementById('ca-churn-rate').textContent = data.churn_rate + '% churn rate';
+      document.getElementById('ca-retained').textContent = data.retained;
+      allCustomers = data.customers;
+      renderTable(allCustomers);
+    }).catch(() => {});
+}
+
+function renderTable(customers) {
+  const tbody = document.getElementById('ca-table-body');
+  if (!customers.length) { tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-slate-400 text-sm">No data available</td></tr>'; return; }
+  tbody.innerHTML = customers.map(c => `
+    <tr class="hover:bg-slate-50 transition-colors">
+      <td class="px-6 py-3 font-mono text-xs font-semibold text-primary">${c.id}</td>
+      <td class="px-6 py-3 text-sm">${c.tenure} months</td>
+      <td class="px-6 py-3 text-sm font-semibold">$${c.monthly_charge.toFixed(2)}</td>
+      <td class="px-6 py-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${c.churn === 1 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">${c.churn === 1 ? 'Churned' : 'Active'}</span></td>
+      <td class="px-6 py-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${c.risk === 'High' ? 'bg-rose-100 text-rose-700' : c.risk === 'Medium' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}">${c.risk} Risk</span></td>
+    </tr>`).join('');
+}
+
+function filterTable(risk) {
+  ['all','High','Low'].forEach(r => {
+    const btn = document.getElementById('filter-'+(r==='all'?'all':r.toLowerCase()));
+    if (btn) btn.className = 'px-3 py-1.5 text-xs font-bold rounded-lg ' + (r === risk ? 'bg-primary text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200');
+  });
+  renderTable(risk === 'all' ? allCustomers : allCustomers.filter(c => c.risk === risk));
+}
+
+// ---- BEHAVIOR ANALYTICS ----
+function loadBehaviorAnalytics() {
+  fetch('http://localhost:8000/api/behavior-analytics')
+    .then(r => r.json()).then(data => {
+      if (data.status !== 'ok' || !data.segments.length) {
+        document.getElementById('behavior-segments-content').innerHTML = '<div class="text-center py-8 text-slate-400">Upload data to see behavior analytics</div>';
+        return;
+      }
+      const colors = ['#1313ec','#818cf8','#06b6d4','#10b981'];
+      document.getElementById('behavior-segments-content').innerHTML = `
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          ${data.segments.map((s,i) => `
+            <div class="rounded-xl p-4 border" style="border-color:${colors[i]}30;background:${colors[i]}08">
+              <div class="w-3 h-3 rounded-full mb-3" style="background:${colors[i]}"></div>
+              <p class="text-xs font-bold text-slate-600 mb-1">${s.segment}</p>
+              <p class="text-2xl font-bold mb-3">${s.count}</p>
+              <div class="space-y-1 text-xs text-slate-500">
+                <div class="flex justify-between"><span>Churn Rate</span><span class="font-bold text-rose-600">${s.churn_rate}%</span></div>
+                <div class="flex justify-between"><span>Avg Charge</span><span class="font-bold">$${s.avg_charge}</span></div>
+                <div class="flex justify-between"><span>Avg Tenure</span><span class="font-bold">${s.avg_tenure} mo</span></div>
+              </div>
+            </div>`).join('')}
+        </div>`;
+
+      const bc = Chart.getChart('behaviorChurnChart'); if (bc) bc.destroy();
+      new Chart(document.getElementById('behaviorChurnChart'), {
+        type:'bar', data:{labels:data.segments.map(s=>s.segment),datasets:[{label:'Churn Rate %',data:data.segments.map(s=>s.churn_rate),backgroundColor:colors,borderRadius:4}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y+'% churn'}}},scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>v+'%'}}}}
+      });
+
+      const bt = Chart.getChart('behaviorTenureChart'); if (bt) bt.destroy();
+      new Chart(document.getElementById('behaviorTenureChart'), {
+        type:'bar', data:{labels:data.segments.map(s=>s.segment),datasets:[{label:'Avg Tenure (months)',data:data.segments.map(s=>s.avg_tenure),backgroundColor:colors,borderRadius:4}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y+' months'}}},scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>v+' mo'}}}}
+      });
+    }).catch(() => {});
+}
+
+// ---- SIMULATION ----
+function initSimulation() {
+  runSimulation();
+}
+
+function runSimulation() {
+  const discount = parseInt(document.getElementById('sim-discount').value);
+  const reach = parseInt(document.getElementById('sim-reach').value);
+  document.getElementById('sim-discount-val').textContent = discount + '%';
+  document.getElementById('sim-reach-val').textContent = reach + '%';
+
+  const risk = globalData ? globalData.at_risk : 0;
+  const avgCharge = globalData ? globalData.avg_monthly_charge : 70;
+  const targeted = Math.round(risk * reach / 100);
+  const saved = Math.round(targeted * (discount / 50));
+  const revenue = saved * avgCharge;
+  const cost = targeted * avgCharge * (discount / 100);
+
+  document.getElementById('sim-churn-reduction').textContent = saved + ' customers';
+  document.getElementById('sim-revenue').textContent = '$' + revenue.toFixed(2) + '/mo';
+  document.getElementById('sim-cost').textContent = '$' + cost.toFixed(2) + '/mo';
+}
+
+// ---- AI STRATEGY ----
+function loadStrategy() {
+  const risk = globalData ? globalData.at_risk : 0;
+  const churn = globalData ? globalData.churn_rate : 0;
+  const strategies = [
+    { title: 'Targeted Discount Campaign', icon: 'local_offer', color: 'blue', desc: `Offer a 15-20% discount to your ${risk} high-risk customers before they churn. Focus on customers with tenure under 12 months.`, impact: 'High Impact', effort: 'Low Effort' },
+    { title: 'Proactive Support Outreach', icon: 'support_agent', color: 'green', desc: 'Reach out to at-risk customers with personalized support calls. Customers with unresolved issues are 3x more likely to churn.', impact: 'Medium Impact', effort: 'Medium Effort' },
+    { title: 'Loyalty Rewards Program', icon: 'star', color: 'amber', desc: 'Introduce a points-based rewards program for long-tenure customers. Loyal customers who feel valued have 60% lower churn rates.', impact: 'High Impact', effort: 'High Effort' },
+    { title: 'Usage Monitoring Alerts', icon: 'notifications_active', color: 'indigo', desc: 'Set up alerts for customers with declining usage. Early intervention when activity drops can reduce churn by up to 25%.', impact: 'Medium Impact', effort: 'Low Effort' },
+    { title: 'Onboarding Improvement', icon: 'school', color: 'cyan', desc: `With ${churn.toFixed(1)}% churn rate, improving onboarding for new customers can reduce early-stage churn significantly.`, impact: 'High Impact', effort: 'Medium Effort' },
+    { title: 'Win-Back Email Campaign', icon: 'mail', color: 'rose', desc: 'Send personalized re-engagement emails to recently churned customers with a special offer to return.', impact: 'Low Impact', effort: 'Low Effort' }
+  ];
+  const colorMap = { blue:'bg-blue-50 border-blue-200 text-blue-600', green:'bg-green-50 border-green-200 text-green-600', amber:'bg-amber-50 border-amber-200 text-amber-600', indigo:'bg-indigo-50 border-indigo-200 text-indigo-600', cyan:'bg-cyan-50 border-cyan-200 text-cyan-600', rose:'bg-rose-50 border-rose-200 text-rose-600' };
+  document.getElementById('strategy-content').innerHTML = strategies.map(s => `
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 hover:-translate-y-1 transition-transform">
+      <div class="flex items-start gap-4">
+        <div class="p-2.5 rounded-lg border ${colorMap[s.color]}"><span class="material-symbols-outlined text-xl">${s.icon}</span></div>
+        <div class="flex-1">
+          <h5 class="font-bold text-sm mb-2">${s.title}</h5>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">${s.desc}</p>
+          <div class="flex gap-2">
+            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full">${s.impact}</span>
+            <span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-full">${s.effort}</span>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ---- INSIGHTS ----
+function loadInsights() {
+  const total = globalData ? globalData.total_customers : 0;
+  const churn = globalData ? globalData.churn_rate : 0;
+  const risk = globalData ? globalData.at_risk : 0;
+  const retained = total - risk;
+  const avgCharge = globalData ? globalData.avg_monthly_charge : 0;
+
+  const insights = total > 0 ? [
+    { icon: 'trending_up', color: 'text-rose-500 bg-rose-50', title: 'Churn Rate Alert', desc: `Your current churn rate is ${churn.toFixed(1)}%. Industry average is around 5-7%. ${churn > 10 ? 'This is above average — immediate action recommended.' : 'You are within a healthy range.'}` },
+    { icon: 'warning', color: 'text-amber-500 bg-amber-50', title: 'At-Risk Customers', desc: `${risk} out of ${total} customers (${churn.toFixed(1)}%) are flagged as high-risk. Targeting these customers with a retention campaign could recover up to $${(risk * avgCharge * 0.6).toFixed(0)} in monthly revenue.` },
+    { icon: 'thumb_up', color: 'text-emerald-500 bg-emerald-50', title: 'Retained Customers', desc: `${retained} customers are currently stable and active. Focus on keeping them satisfied to maintain your ${((retained/total)*100).toFixed(1)}% retention rate.` },
+    { icon: 'attach_money', color: 'text-blue-500 bg-blue-50', title: 'Revenue Insight', desc: `Average monthly charge per customer is $${avgCharge.toFixed(2)}. Total monthly revenue from retained customers is approximately $${(retained * avgCharge).toFixed(2)}.` },
+    { icon: 'lightbulb', color: 'text-indigo-500 bg-indigo-50', title: 'Recommendation', desc: `Start with a targeted outreach campaign to your ${risk} at-risk customers. Even saving 50% of them would reduce churn to ${((risk*0.5/total)*100).toFixed(1)}%.` }
+  ] : [{ icon: 'upload_file', color: 'text-slate-400 bg-slate-50', title: 'No Data Yet', desc: 'Upload your customer CSV file to generate AI-powered insights.' }];
+
+  document.getElementById('insights-content').innerHTML = insights.map(i => `
+    <div class="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+      <div class="p-2 rounded-lg ${i.color} shrink-0"><span class="material-symbols-outlined text-xl">${i.icon}</span></div>
+      <div><p class="font-semibold text-sm mb-1">${i.title}</p><p class="text-xs text-slate-500 leading-relaxed">${i.desc}</p></div>
+    </div>`).join('');
+}
+
+// ---- UPLOAD ----
+function uploadFile() {
+  const fileInput = document.getElementById('fileInput');
+  if (!fileInput || !fileInput.files[0]) { alert('Please select a CSV file first'); return; }
+  const btn = document.querySelector('button[onclick="uploadFile()"]');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="material-symbols-outlined">hourglass_top</span> Uploading...'; }
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+  fetch('http://localhost:8000/api/upload-data', {method:'POST', body:formData})
+    .then(r => r.json()).then(data => {
+      if (btn) { btn.disabled=false; btn.innerHTML='<span class="material-symbols-outlined">rocket_launch</span> Start Upload and Processing'; }
+      if (data.status === 'success') { alert('Success! '+data.rows+' rows uploaded.'); loadPage('dashboard'); }
+      else { alert('Upload failed: '+(data.message||'Unknown error')); }
+    }).catch(() => { if (btn) { btn.disabled=false; btn.innerHTML='<span class="material-symbols-outlined">rocket_launch</span> Start Upload and Processing'; } alert('Upload failed. Make sure backend is running at localhost:8000'); });
+}
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', e => { e.preventDefault(); loadPage(item.dataset.page); });
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  new Chart(document.getElementById('chargesChart'), {
+    type:'line', data:{labels:['Jan','Feb','Mar','Apr','May','Jun'],datasets:[{label:'Avg Monthly Charge ($)',data:[62,70,65,80,74,89],borderColor:'#1313ec',backgroundColor:'rgba(19,19,236,0.08)',tension:0.4,fill:true,pointRadius:4,pointBackgroundColor:'#1313ec',pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' $'+ctx.parsed.y}}},scales:{x:{display:true,grid:{display:false},ticks:{font:{size:9}}},y:{display:true,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9},callback:v=>'$'+v}}}}
+  });
+  document.getElementById('avg-charge').textContent = '$73.33';
+  document.getElementById('charge-peak').textContent = '$89';
+
+  new Chart(document.getElementById('churnDistributionChart'), {
+    type:'line', data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'],datasets:[
+      {label:'Actual',data:[30,28,35,40,38,42,45,40],borderColor:'#1313ec',backgroundColor:'rgba(19,19,236,0.05)',tension:0.4,fill:true,pointRadius:0,borderWidth:2.5},
+      {label:'Predicted',data:[28,30,32,38,40,40,42,38],borderColor:'#818cf8',backgroundColor:'rgba(129,140,248,0.03)',tension:0.4,fill:true,pointRadius:0,borderWidth:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:10},callback:v=>v+'%'}}}}
+  });
+
+  loadDashboard();
+});
+</script>
+</body></html>
